@@ -1,0 +1,241 @@
+{
+  "name": "Test Case Generator from JIRA Ticket",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "1fa16bd2-9026-48c5-b599-4f11c3749b2b",
+      "name": "Chat Trigger",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -160,
+        0
+      ],
+      "webhookId": "c32d8338-a3fc-47d3-9604-5e4867043b16"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.chatInput }}",
+              "operation": "regex",
+              "value2": "[A-Z][A-Z0-9]+-[0-9]+"
+            }
+          ]
+        }
+      },
+      "id": "d454d90e-03d3-420d-ac94-ceb195f4a301",
+      "name": "Is Jira Ticket ID?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        48,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "issueKey": "={{ $json.chatInput.match(/[A-Z][A-Z0-9]+-[0-9]+/)[0] }}",
+        "additionalFields": {}
+      },
+      "id": "6f4f4a95-c16e-41c8-b0cf-b49266a81c4e",
+      "name": "Jira Software",
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [
+        288,
+        -144
+      ],
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "nYDQ6iajXDzVK0OD",
+          "name": "Jira SW Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "requirement_text",
+              "value": "Title: {{ $json.fields.summary }}\nDescription: {{ $json.fields.description }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5f1c90e3-3413-4743-b570-5c4f68e9e8e6",
+      "name": "Format Jira Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        512,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "requirement_text",
+              "value": "={{ $json.chatInput }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9f7b58db-f146-4e98-90a2-a7aa0850b771",
+      "name": "Format Text Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        288,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.requirement_text }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "Role: You are a Senior QA Engineer.\n\nTask: Generate functional test cases based on the provided requirement or user story.\n\nOutput: Format your output strictly as a Markdown table with the following columns:\n- Test Case ID\n- Description\n- Pre-conditions\n- Steps to Execute\n- Expected Result\n\nConstraints: Generate ONLY from the provided requirement. If info is missing for any column, write 'Needs clarification'. Do not invent or assume features, rules, or details not explicitly mentioned in the input."
+            }
+          ]
+        }
+      },
+      "id": "6107e5ff-772a-49e1-a6a7-3ee73d965dd2",
+      "name": "Basic LLM Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        752,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {
+          "temperature": 0
+        }
+      },
+      "id": "ca102cd9-8584-423d-a2b4-f40c16d575f8",
+      "name": "Groq Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        752,
+        224
+      ],
+      "credentials": {
+        "groqApi": {
+          "id": "5PrMVISdeypl3Vrc",
+          "name": "Groq account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Chat Trigger": {
+      "main": [
+        [
+          {
+            "node": "Is Jira Ticket ID?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Jira Ticket ID?": {
+      "main": [
+        [
+          {
+            "node": "Jira Software",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Format Text Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Jira Software": {
+      "main": [
+        [
+          {
+            "node": "Format Jira Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Jira Data": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Text Input": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "456467e7-b885-4f33-abc2-bbd555a46d5a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "02a5d577cc793c2d0d295848e32ed90454e061cc904e96a00e5e8e28e468d21c"
+  },
+  "id": "mYCrbdM_4YxxojMOU_iz4",
+  "tags": [
+    {
+      "name": "Test",
+      "id": "b4ZApFb5GUn03uMi",
+      "updatedAt": "2026-02-28T07:46:41.531Z",
+      "createdAt": "2026-02-28T07:46:41.531Z"
+    }
+  ]
+}
