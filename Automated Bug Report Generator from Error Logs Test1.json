@@ -1,0 +1,99 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "f0f2e343-987b-4e17-a6b5-d77a9b274b4c",
+      "name": "On chat message",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -176,
+        -80
+      ],
+      "webhookId": "78875e09-ab01-412c-b6e7-2291a5540c0c"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a QA Engineer. Your task is to generate a structured bug report based on the provided error logs. \n\nFormat the output EXACTLY as a single line separated by pipes (\"|\"), following this template:\nTitle: \"[Concise description of the error]\" | Severity: [High/Medium/Low] | Steps: [Steps leading to the error] | Expected: [What should have normally happened] | Actual: [What actually happened]\n\nAnti-hallucination constraint: Use ONLY the log data provided. Mark unknown fields as [UNKNOWN]. Do not invent or assume any details. Do not include any conversational text, output only the requested string."
+            }
+          ]
+        }
+      },
+      "id": "24e06bb9-cad1-44c5-bbd3-bc8b27e3e0f6",
+      "name": "Basic LLM Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        48,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {
+          "temperature": 0
+        }
+      },
+      "id": "a59c5d39-9818-4494-84c4-d619b11afde3",
+      "name": "Groq Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        48,
+        144
+      ],
+      "credentials": {
+        "groqApi": {
+          "id": "5PrMVISdeypl3Vrc",
+          "name": "Groq account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On chat message": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "532c933c-d35b-451a-ba87-5fefa328f5d9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "02a5d577cc793c2d0d295848e32ed90454e061cc904e96a00e5e8e28e468d21c"
+  },
+  "id": "przwWIqsqd5-hoj1TzmQH",
+  "tags": []
+}
